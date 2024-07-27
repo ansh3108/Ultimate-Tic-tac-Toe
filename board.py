@@ -121,3 +121,121 @@ class Board:
             return
 
         sqr.draw_fig(surface, xclick, yclick)
+            
+            elif sqr == 2:
+                center = (self.dims.xcor + self.dims.sqsize * (0.5 + col),
+                          self.dims.ycor + self.dims.sqsize * (0.5 + row))
+
+                pygame.draw.circle(surface, CIRCLE_COLOR, center, self.radius, self.linewidth)
+
+            return
+
+        # recursive step
+        sqr.draw_fig(surface, xclick, yclick)
+
+    def manage_win(self, surface, winner, onmain=False):
+        # transparent screen
+        transparent = pygame.Surface( (self.dims.size, self.dims.size) )
+        transparent.set_alpha( ALPHA )
+        transparent.fill( FADE )
+        if onmain: 
+            surface.blit(transparent, (self.dims.xcor, self.dims.ycor))
+            surface.blit(transparent, (self.dims.xcor, self.dims.ycor))
+        surface.blit(transparent, (self.dims.xcor, self.dims.ycor))
+        
+        # draw win
+        if not onmain:
+            # cross
+            if winner == 1:
+                # desc line
+                ipos = (self.dims.xcor + self.offset, 
+                        self.dims.ycor + self.offset)
+                fpos = (self.dims.xcor + self.dims.size - self.offset, 
+                        self.dims.ycor + self.dims.size - self.offset)
+                pygame.draw.line(surface, CROSS_COLOR, ipos, fpos, self.linewidth + 7)
+
+                # asc line
+                ipos = (self.dims.xcor + self.offset, 
+                        self.dims.ycor + self.dims.size - self.offset)
+                fpos = (self.dims.xcor + self.dims.size - self.offset, 
+                        self.dims.ycor + self.offset)
+                pygame.draw.line(surface, CROSS_COLOR, ipos, fpos, self.linewidth + 7)
+
+            # circle
+            if winner == 2:
+                center = (self.dims.xcor + self.dims.size * 0.5,
+                        self.dims.ycor + self.dims.size * 0.5)
+
+                pygame.draw.circle(surface, CIRCLE_COLOR, center, self.dims.size * 0.4, self.linewidth + 7)
+
+        # inactive board
+        self.active = False
+
+    def check_draw_win(self, surface,):
+
+        isfull = True
+
+        for row in range(DIM):
+            for col in range(DIM):
+
+                # base case sqr should have numbers                    
+                sqr = self.squares[row][col]
+
+                if isinstance(sqr, Board) and sqr.active:
+                    # other board win
+                    winner = sqr.check_draw_win(surface)
+                    if winner: # recursive step
+                        self.squares[row][col] = winner
+                        sqr.manage_win(surface, winner)
+
+                # main
+                # vertical wins
+                for c in range(DIM):
+                    if self.squares[0][c] == self.squares[1][c] == self.squares[2][c] != 0:
+                        color = CROSS_COLOR if self.squares[0][c] == 1 else CIRCLE_COLOR
+                        # draw win
+                        ipos = (self.dims.xcor + self.dims.sqsize * (0.5 + c), 
+                                self.dims.ycor + self.offset)
+                        fpos = (self.dims.xcor + self.dims.sqsize * (0.5 + c), 
+                                self.dims.ycor + self.dims.size - self.offset)
+                        pygame.draw.line(surface, color, ipos, fpos, self.linewidth)
+
+                        return self.squares[0][c]
+
+                # horizontal wins
+                for r in range(DIM):
+                    if self.squares[r][0] == self.squares[r][1] == self.squares[r][2] != 0:
+                        color = CROSS_COLOR if self.squares[r][0] == 1 else CIRCLE_COLOR
+                        # draw win
+                        ipos = (self.dims.xcor + self.offset, 
+                                self.dims.ycor + self.dims.sqsize * (r + 0.5))
+                        fpos = (self.dims.xcor + self.dims.size - self.offset, 
+                                self.dims.ycor + self.dims.sqsize * (r + 0.5))
+                        pygame.draw.line(surface, color, ipos, fpos, self.linewidth)
+
+                        return self.squares[r][0]
+
+                # diagonal wins
+                # desc
+                if self.squares[0][0] == self.squares[1][1] == self.squares[2][2] != 0:
+                    color = CROSS_COLOR if self.squares[1][1] == 1 else CIRCLE_COLOR
+                    # draw win
+                    ipos = (self.dims.xcor + self.offset, 
+                            self.dims.ycor + self.offset)
+                    fpos = (self.dims.xcor + self.dims.size - self.offset, 
+                            self.dims.ycor + self.dims.size - self.offset)
+                    pygame.draw.line(surface, color, ipos, fpos, self.linewidth)
+
+                    return self.squares[1][1]
+
+                # asc
+                if self.squares[2][0] == self.squares[1][1] == self.squares[0][2] != 0:
+                    color = CROSS_COLOR if self.squares[1][1] == 1 else CIRCLE_COLOR
+                    # draw win
+                    ipos = (self.dims.xcor + self.offset, 
+                            self.dims.ycor + self.dims.size - self.offset)
+                    fpos = (self.dims.xcor + self.dims.size - self.offset, 
+                            self.dims.ycor + self.offset)
+                    pygame.draw.line(surface, color, ipos, fpos, self.linewidth)
+
+                    return self.squares[1][1]
