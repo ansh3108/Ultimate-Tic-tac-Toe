@@ -1,3 +1,4 @@
+
 from const import *
 
 class BoardDim:
